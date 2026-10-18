@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Gods records</title>
+
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <style>
+        :root {
+            --bg-dark: #1b3322;
+            --panel-bg: #23442d;
+            --card-bg: #2a5c3a;
+            --input-bg: #cccccc;
+            --text-color: #ffffff;
+            --text-muted: #a0b0a0;
+            --accent: #4caf50;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .topbar h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: normal;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: var(--text-color);
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 20px;
+            background-color: rgba(0,0,0,0.15);
+            padding: 6px 20px;
+            border-radius: 20px;
+        }
+
+        .tool-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            opacity: 0.7;
+            padding: 4px 10px;
+            border-radius: 8px;
+            transition: opacity 0.2s, transform 0.15s, background 0.2s, outline-color 0.15s;
+            outline: 2px dashed transparent;
+            outline-offset: 2px;
+        }
+
+        .tool-btn:hover {
+            opacity: 1;
+        }
+
+        .tool-btn.active {
+            opacity: 1;
+            filter: drop-shadow(0 0 4px var(--accent));
+        }
+
+        /* Состояние «над кнопкой тащат карточку» */
+        .tool-btn.drag-over {
+            opacity: 1;
+            transform: scale(1.2);
+            background-color: rgba(76, 175, 80, 0.35);
+            outline-color: var(--accent);
+        }
+
+        /* Нельзя дропнуть туда, где уже находимся */
+        .tool-btn.drop-disabled {
+            background-color: rgba(255, 107, 107, 0.25);
+            outline-color: #ff6b6b;
+        }
+
+        .add-icon-btn {
+            background: var(--card-bg);
+            border: none;
+            color: var(--text-color);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .add-icon-btn:hover {
+            background: #347047;
+        }
+
+        /* Кнопка «Очистить корзину» — отдельная строка под тулбаром, выравнивание по правому краю */
+        .trash-actions {
+            justify-content: flex-end;
+            margin: -10px 0 20px 0;
+        }
+
+        .trash-actions .logout-btn {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .trash-actions .logout-btn:hover {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .create-box {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .create-box input, .create-box textarea {
+            background-color: var(--input-bg);
+            border: none;
+            border-radius: 6px;
+            padding: 10px;
+            color: #111;
+            font-family: inherit;
+        }
+
+        .create-box input { width: 25%; }
+        .create-box textarea { flex: 1; resize: none; }
+
+        .create-box button {
+            background-color: var(--card-bg);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .create-box button:hover { background: #347047; }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .note-card {
+            background-color: var(--card-bg);
+            height: 160px;
+            border-radius: 12px;
+            padding: 15px;
+            position: relative;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            cursor: grab;
+        }
+
+        .note-card:active {
+            cursor: grabbing;
+        }
+
+        .note-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .note-card.dragging {
+            opacity: 0.4;
+            transform: rotate(2deg) scale(0.98);
+        }
+
+        .note-card h3 {
+            margin: 0 0 6px 0;
+            font-size: 15px;
+            font-weight: normal;
+            word-break: break-word;
+        }
+
+        .note-card h3 a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .note-card h3 a:hover {
+            text-decoration: underline;
+        }
+
+        .note-card p {
+            margin: 0;
+            font-size: 13px;
+            color: #c0dac8;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            line-height: 1.4;
+        }
+
+        .note-card .card-meta {
+            position: absolute;
+            bottom: 10px;
+            left: 15px;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .empty-text {
+            color: var(--text-muted);
+            font-size: 14px;
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 40px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="topbar">
+        <h2>Gods records</h2>
+        <div class="user-section">
+            <div>Привет, <span sec:authentication="name">user</span>!</div>
+            <form th:action="@{/logout}" method="post" style="margin:0;">
+                <button type="submit" class="logout-btn">Выйти</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Верхний ряд: + слева, тулбар справа. Тулбар всегда на своём месте. -->
+    <div class="controls-row">
+        <button class="add-icon-btn" onclick="toggleCreateBox()" title="Новая заметка">＋</button>
+
+        <div class="toolbar">
+            <button data-type="NORMAL"   class="tool-btn active" title="Обычные заметки">📄</button>
+            <button data-type="ARCHIVED" class="tool-btn"        title="Архив">📦</button>
+            <button data-type="TRASH"    class="tool-btn"        title="Корзина">🗑️</button>
+        </div>
+    </div>
+
+    <!-- Кнопка очистки корзины — отдельная строка ниже, появляется только в TRASH -->
+    <div id="trashActions" class="trash-actions" style="display:none;">
+        <button id="clearTrashBtn" class="logout-btn">Очистить корзину</button>
+    </div>
+
+    <div class="create-box" id="createBox" style="display: none;">
+        <input type="text" id="name" placeholder="Заголовок" required />
+        <textarea id="body" placeholder="Текст заметки..." rows="1"></textarea>
+        <button type="button" onclick="submitCreateForm()">Создать</button>
+    </div>
+
+    <div class="notes-grid" id="tasksList"></div>
+    <div id="emptyMsg" class="empty-text" style="display:none;">Заметок нет</div>
+</div>
+
+<script>
+    const csrfToken  = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+    let currentType = 'NORMAL';
+
+    // Задача, которую сейчас тащат (устанавливается в dragstart)
+    let draggedTask = null;
+
+    function toggleCreateBox() {
+        const box = document.getElementById('createBox');
+        box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    // ====== Загрузка списка заметок ======
+    async function loadTasks() {
+        const res = await fetch('/api/all/type?type=' + currentType);
+        if (!res.ok) {
+            console.error('Ошибка загрузки', res.status);
+            return;
+        }
+        const tasks = await res.json();
+
+        const list  = document.getElementById('tasksList');
+        const empty = document.getElementById('emptyMsg');
+        list.innerHTML = '';
+
+        // Блок «Очистить корзину» показываем только во вкладке TRASH
+        document.getElementById('trashActions').style.display =
+            currentType === 'TRASH' ? 'flex' : 'none';
+
+        if (tasks.length === 0) {
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+
+        tasks.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'note-card';
+            card.draggable = true;
+
+            // Никаких чекбоксов — статус меняется только перетаскиванием
+            card.innerHTML = `
+                <h3>
+                    <a href="/task/${t.id}" draggable="false">${escapeHtml(t.name)}</a>
+                </h3>
+                <p>${escapeHtml(t.body ?? '')}</p>
+                <div class="card-meta">${new Date(t.createdAt).toLocaleDateString('ru-RU')}</div>
+            `;
+
+            // ====== Drag & Drop: источник ======
+            card.addEventListener('dragstart', (e) => {
+                draggedTask = t;
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', String(t.id));
+            });
+
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+                draggedTask = null;
+                document.querySelectorAll('.toolbar .tool-btn').forEach(b => {
+                    b.classList.remove('drag-over', 'drop-disabled');
+                });
+            });
+
+            list.appendChild(card);
+        });
+    }
+
+    // ====== Создание заметки ======
+    async function submitCreateForm() {
+        const nameInput = document.getElementById('name');
+        const bodyInput = document.getElementById('body');
+
+        if (!nameInput.value.trim()) {
+            alert('Введите заголовок заметки');
+            return;
+        }
+
+        const params = new URLSearchParams({
+            name: nameInput.value,
+            body: bodyInput.value
+        });
+
+        const res = await fetch('/api/create?' + params, {
+            method: 'POST',
+            headers: { [csrfHeader]: csrfToken }
+        });
+
+        if (res.status === 201) {
+            nameInput.value = '';
+            bodyInput.value = '';
+            document.getElementById('createBox').style.display = 'none';
+
+            if (currentType !== 'NORMAL') {
+                currentType = 'NORMAL';
+                highlightTab();
+            }
+            loadTasks();
+        } else {
+            alert('Не удалось создать: ' + res.status);
+        }
+    }
+
+    // ====== Смена статуса заметки ======
+    async function changeType(task, newType) {
+        const params = new URLSearchParams({
+            name: task.name,
+            body: task.body ?? '',
+            type: newType
+        });
+
+        const res = await fetch('/api/update/' + task.id + '?' + params, {
+            method: 'PUT',
+            headers: { [csrfHeader]: csrfToken }
+        });
+
+        if (res.ok) loadTasks();
+        else alert('Не удалось обновить статус: ' + res.status);
+    }
+
+    // ====== Очистка корзины ======
+    document.getElementById('clearTrashBtn').addEventListener('click', async () => {
+        if (!confirm('Очистить корзину полностью? Это удалит все заметки из корзины.')) return;
+
+        const res = await fetch('/api/delete', {
+            method: 'DELETE',
+            headers: { [csrfHeader]: csrfToken }
+        });
+
+        if (res.status === 204) {
+            loadTasks();
+            alert('Корзина очищена');
+        } else {
+            alert('Не удалось очистить: ' + res.status);
+        }
+    });
+
+    // ====== Кнопки тулбара = вкладки + drop-зоны ======
+    document.querySelectorAll('.toolbar .tool-btn').forEach(btn => {
+        const targetType = btn.dataset.type;
+
+        // --- клик = переключение вкладки ---
+        btn.addEventListener('click', () => {
+            currentType = btn.dataset.type;
+            highlightTab();
+            loadTasks();
+        });
+
+        // --- dragenter / dragleave: счётчик, чтобы не мигало ---
+        let counter = 0;
+
+        btn.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            if (!draggedTask) return;
+            counter++;
+            btn.classList.add('drag-over');
+            if (targetType === currentType) {
+                btn.classList.add('drop-disabled');
+            }
+        });
+
+        btn.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!draggedTask) return;
+            e.dataTransfer.dropEffect =
+                (targetType === currentType) ? 'none' : 'move';
+        });
+
+        btn.addEventListener('dragleave', () => {
+            counter--;
+            if (counter <= 0) {
+                counter = 0;
+                btn.classList.remove('drag-over', 'drop-disabled');
+            }
+        });
+
+        btn.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            counter = 0;
+            btn.classList.remove('drag-over', 'drop-disabled');
+
+            if (!draggedTask) return;
+            if (targetType === currentType) return;
+
+            const task = draggedTask;
+            draggedTask = null;
+
+            await changeType(task, targetType);
+        });
+    });
+
+    function highlightTab() {
+        document.querySelectorAll('.toolbar .tool-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.type === currentType);
+        });
+    }
+
+    // ====== Экранирование HTML ======
+    function escapeHtml(s) {
+        return String(s)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    // Старт
+    loadTasks();
+</script>
+</body>
+</html>

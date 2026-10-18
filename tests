@@ -1,0 +1,640 @@
+#!/usr/bin/env bash
+# create-tests.sh — генерирует структуру тестов для проекта one
+set -euo pipefail
+
+# Корень проекта — папка, где лежит pom.xml (или рядом со скриптом)
+if [ -f "pom.xml" ]; then
+    ROOT="$(pwd)"
+else
+    ROOT="$(cd "$(dirname "$0")" && pwd)"
+fi
+
+echo "Проект: $ROOT"
+
+TEST_JAVA="$ROOT/src/test/java/com/God/sRecords/one"
+TEST_RES="$ROOT/src/test/resources"
+
+# --- создаём папки ---
+mkdir -p "$TEST_JAVA/controller"
+mkdir -p "$TEST_JAVA/dto"
+mkdir -p "$TEST_JAVA/repository"
+mkdir -p "$TEST_JAVA/service"
+mkdir -p "$TEST_JAVA/regestration/controller"
+mkdir -p "$TEST_JAVA/regestration/service"
+mkdir -p "$TEST_RES"
+
+echo "Папки созданы."
+
+# =========================================================
+# 1. TaskServiceTest.java
+# =========================================================
+cat > "$TEST_JAVA/service/TaskServiceTest.java" <<'EOF'
+package com.God.sRecords.one.service;
+
+import com.God.sRecords.one.model.Task;
+import com.God.sRecords.one.model.TypeTask;
+import com.God.sRecords.one.regestration.model.User;
+import com.God.sRecords.one.repository.TaskRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class TaskServiceTest {
+
+    @Mock
+    private TaskRepository taskRepository;
+
+    @InjectMocks
+    private TaskService taskService;
+
+    private User user;
+    private User otherUser;
+    private Task task;
+
+    @BeforeEach
+    void setUp() {
+        user = new User("Иван", "ivan@mail.com", "encoded");
+        user.setId(1L);
+
+        otherUser = new User("Пётр", "petr@mail.com", "encoded");
+        otherUser.setId(2L);
+
+        task = new Task("Тест", "Описание", user);
+        task.setId(10L);
+    }
+
+    @Test
+    @DisplayName("createTask — сохраняет задачу с типом NORMAL и привязанным пользователем")
+    void createTask_shouldSaveTaskWithUser() {
+        when(taskRepository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        taskService.createTask("Заголовок", "Тело", user);
+
+        verify(taskRepository, times(1)).save(any(Task.class));
+    }
+
+    @Test
+    @DisplayName("updateTask — обновляет поля, если задача принадлежит пользователю")
+    void updateTask_shouldUpdateFields_whenOwnerMatches() {
+        when(taskRepository.findById(10L)).thenReturn(Optional.of(task));
+
+        taskService.updateTask(10L, "Новое имя", "Новое тело", TypeTask.ARCHIVED, user);
+
+        assertThat(task.getName()).isEqualTo("Новое имя");
+        assertThat(task.getBody()).isEqualTo("Новое тело");
+        assertThat(task.getType()).isEqualTo(TypeTask.ARCHIVED);
+        verify(taskRepository).save(task);
+    }
+
+    @Test
+    @DisplayName("updateTask — не обновляет, если задача принадлежит другому пользователю")
+    void updateTask_shouldNotUpdate_whenOwnerDiffers() {
+        when(taskRepository.findById(10L)).thenReturn(Optional.of(task));
+
+        taskService.updateTask(10L, "Хак", "Хак", TypeTask.TRASH, otherUser);
+
+        assertThat(task.getName()).isEqualTo("Тест");
+        assertThat(task.getType()).isEqualTo(TypeTask.NORMAL);
+        verify(taskRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("updateTask — бросает исключение, если задача не найдена")
+    void updateTask_shouldThrow_whenTaskMissing() {
+        when(taskRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                taskService.updateTask(99L, "x", "y", TypeTask.NORMAL, user))
+                .isInstanceOf(java.util.NoSuchElementException.class);
+    }
+
+    @Test
+    @DisplayName("deleteTask — удаляет только задачи типа TRASH текущего пользователя")
+    void deleteTask_shouldCallRepositoryWithTrashType() {
+        taskService.deleteTask(user);
+
+        verify(taskRepository).deleteByUserIdAndType(1L, TypeTask.TRASH);
+    }
+
+    @Test
+    @DisplayName("allTask — возвращает список задач пользователя")
+    void allTask_shouldReturnUserTasks() {
+        when(taskRepository.findByUserId(1L)).thenReturn(List.of(task));
+
+        List<Task> result = taskService.allTask(user);
+
+        assertThat(result).hasSize(1).containsExactly(task);
+    }
+
+    @Test
+    @DisplayName("currrentTask — возвращает задачу, если она принадлежит пользователю")
+    void currrentTask_shouldReturnTask_whenOwnerMatches() {
+        when(taskRepository.findById(10L)).thenReturn(Optional.of(task));
+
+        Optional<Task> result = taskService.currrentTask(10L, user);
+
+        assertThat(result).isPresent();
+    }
+
+    @Test
+    @DisplayName("currrentTask — пусто, если задача чужого пользователя")
+    void currrentTask_shouldReturnEmpty_whenOwnerDiffers() {
+        when(taskRepository.findById(10L)).thenReturn(Optional.of(task));
+
+        Optional<Task> result = taskService.currrentTask(10L, otherUser);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("tasksType — фильтрация по типу")
+    void tasksType_shouldFilterByType() {
+        when(taskRepository.findByUserIdAndType(1L, TypeTask.ARCHIVED))
+                .thenReturn(List.of(task));
+
+        List<Task> result = taskService.tasksType(user, TypeTask.ARCHIVED);
+
+        assertThat(result).hasSize(1);
+        verify(taskRepository).findByUserIdAndType(1L, TypeTask.ARCHIVED);
+    }
+}
+EOF
+
+# =========================================================
+# 2. ApiControllerTest.java
+# =========================================================
+cat > "$TEST_JAVA/controller/ApiControllerTest.java" <<'EOF'
+package com.God.sRecords.one.controller;
+
+import com.God.sRecords.one.model.Task;
+import com.God.sRecords.one.model.TypeTask;
+import com.God.sRecords.one.regestration.model.User;
+import com.God.sRecords.one.service.TaskService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@ExtendWith(MockitoExtension.class)
+class ApiControllerTest {
+
+    @Mock
+    private TaskService taskService;
+
+    @InjectMocks
+    private ApiController apiController;
+
+    private MockMvc mockMvc;
+    private User user;
+    private Task task;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(apiController).build();
+
+        user = new User("Иван", "ivan@mail.com", "encoded");
+        user.setId(1L);
+
+        task = new Task("Тест", "Тело", user);
+        task.setId(10L);
+    }
+
+    @Test
+    @DisplayName("POST /api/create — 201 Created")
+    void createTask_shouldReturn201() throws Exception {
+        mockMvc.perform(post("/api/create")
+                        .param("name", "Заголовок")
+                        .param("body", "Тело"))
+                .andExpect(status().isCreated());
+
+        verify(taskService).createTask(eq("Заголовок"), eq("Тело"), any());
+    }
+
+    @Test
+    @DisplayName("PUT /api/update/{id} — 200 OK")
+    void updateTask_shouldReturn200() throws Exception {
+        mockMvc.perform(put("/api/update/10")
+                        .param("name", "N")
+                        .param("body", "B")
+                        .param("type", "ARCHIVED"))
+                .andExpect(status().isOk());
+
+        verify(taskService).updateTask(eq(10L), eq("N"), eq("B"),
+                eq(TypeTask.ARCHIVED), any());
+    }
+
+    @Test
+    @DisplayName("GET /api/all — возвращает список DTO")
+    void getAllTasks_shouldReturnList() throws Exception {
+        when(taskService.allTask(any())).thenReturn(List.of(task));
+
+        mockMvc.perform(get("/api/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(10))
+                .andExpect(jsonPath("$[0].name").value("Тест"));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/delete — 204 No Content")
+    void deleteTask_shouldReturn204() throws Exception {
+        mockMvc.perform(delete("/api/delete"))
+                .andExpect(status().isNoContent());
+
+        verify(taskService).deleteTask(any());
+    }
+
+    @Test
+    @DisplayName("GET /api/task/{id} — 200 OK если найдено")
+    void getTask_shouldReturn200() throws Exception {
+        when(taskService.currrentTask(eq(10L), any())).thenReturn(Optional.of(task));
+
+        mockMvc.perform(get("/api/task/10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10));
+    }
+
+    @Test
+    @DisplayName("GET /api/task/{id} — 404 если не найдено")
+    void getTask_shouldReturn404_whenMissing() throws Exception {
+        when(taskService.currrentTask(eq(10L), any())).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/task/10"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/all/type — фильтр по типу")
+    void getAllTasksType_shouldFilter() throws Exception {
+        when(taskService.tasksType(any(), eq(TypeTask.TRASH)))
+                .thenReturn(List.of(task));
+
+        mockMvc.perform(get("/api/all/type").param("type", "TRASH"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+}
+EOF
+
+# =========================================================
+# 3. AuthViewControllerTest.java
+# =========================================================
+cat > "$TEST_JAVA/regestration/controller/AuthViewControllerTest.java" <<'EOF'
+package com.God.sRecords.one.regestration.controller;
+
+import com.God.sRecords.one.regestration.dto.UserDTO;
+import com.God.sRecords.one.regestration.model.User;
+import com.God.sRecords.one.regestration.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@ExtendWith(MockitoExtension.class)
+class AuthViewControllerTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @InjectMocks
+    private AuthViewController controller;
+
+    private MockMvc mockMvc;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+    }
+
+    private UserDTO validDto() {
+        UserDTO dto = new UserDTO();
+        dto.setEmail("test@mail.com");
+        dto.setName("Иван");
+        dto.setPassword("Password1");
+        return dto;
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/register — 201 Created при успехе")
+    void register_shouldReturn201() throws Exception {
+        when(userRepository.findByEmail("test@mail.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("Password1")).thenReturn("hashed");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validDto())))
+                .andExpect(status().isCreated());
+
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/register — 409 Conflict если email занят")
+    void register_shouldReturn409_whenEmailTaken() throws Exception {
+        when(userRepository.findByEmail("test@mail.com"))
+                .thenReturn(Optional.of(new User()));
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validDto())))
+                .andExpect(status().isConflict());
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/register — 400 при невалидных данных")
+    void register_shouldReturn400_whenInvalid() throws Exception {
+        UserDTO bad = new UserDTO();
+        bad.setEmail("not-an-email");
+        bad.setName("A");
+        bad.setPassword("short");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bad)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/register — пароль без заглавной и цифры не проходит валидацию")
+    void register_shouldRejectWeakPassword() throws Exception {
+        UserDTO weak = validDto();
+        weak.setPassword("alllowercase");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(weak)))
+                .andExpect(status().isBadRequest());
+    }
+}
+EOF
+
+# =========================================================
+# 4. CustomUserDetailsServiceTest.java
+# =========================================================
+cat > "$TEST_JAVA/regestration/service/CustomUserDetailsServiceTest.java" <<'EOF'
+package com.God.sRecords.one.regestration.service;
+
+import com.God.sRecords.one.regestration.model.User;
+import com.God.sRecords.one.regestration.repository.UserRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class CustomUserDetailsServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @InjectMocks
+    private CustomUserDetailsService service;
+
+    @Test
+    @DisplayName("loadUserByUsername — возвращает UserDetails по email")
+    void loadUser_shouldReturnUserDetails() {
+        User user = new User("Иван", "ivan@mail.com", "hashed");
+        when(userRepository.findByEmail("ivan@mail.com"))
+                .thenReturn(Optional.of(user));
+
+        UserDetails result = service.loadUserByUsername("ivan@mail.com");
+
+        assertThat(result).isNotNull();
+        assertThat(result.getUsername()).isEqualTo("Иван");
+        assertThat(result.getPassword()).isEqualTo("hashed");
+        assertThat(result.getAuthorities())
+                .extracting("authority")
+                .containsExactly("ROLE_USER");
+    }
+
+    @Test
+    @DisplayName("loadUserByUsername — бросает UsernameNotFoundException, если нет пользователя")
+    void loadUser_shouldThrow_whenNotFound() {
+        when(userRepository.findByEmail("nope@mail.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.loadUserByUsername("nope@mail.com"))
+                .isInstanceOf(UsernameNotFoundException.class)
+                .hasMessageContaining("nope@mail.com");
+    }
+}
+EOF
+
+# =========================================================
+# 5. TaskRepositoryTest.java
+# =========================================================
+cat > "$TEST_JAVA/repository/TaskRepositoryTest.java" <<'EOF'
+package com.God.sRecords.one.repository;
+
+import com.God.sRecords.one.model.Task;
+import com.God.sRecords.one.model.TypeTask;
+import com.God.sRecords.one.regestration.model.User;
+import com.God.sRecords.one.regestration.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DataJpaTest
+@ActiveProfiles("test")
+class TaskRepositoryTest {
+
+    @Autowired
+    private TaskRepository taskRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private User user;
+    private User other;
+
+    @BeforeEach
+    void setUp() {
+        user = userRepository.save(new User("Иван", "ivan@mail.com", "x"));
+        other = userRepository.save(new User("Пётр", "petr@mail.com", "x"));
+
+        Task t1 = new Task("A", "bodyA", user);
+        Task t2 = new Task("B", "bodyB", user);
+        t2.setType(TypeTask.TRASH);
+        Task t3 = new Task("C", "bodyC", other);
+
+        taskRepository.saveAll(List.of(t1, t2, t3));
+    }
+
+    @Test
+    @DisplayName("findByUserId — возвращает только задачи пользователя")
+    void findByUserId_shouldFilterByUser() {
+        List<Task> tasks = taskRepository.findByUserId(user.getId());
+
+        assertThat(tasks).hasSize(2)
+                .extracting(Task::getName)
+                .containsExactlyInAnyOrder("A", "B");
+    }
+
+    @Test
+    @DisplayName("findByUserIdAndType — фильтрует по типу")
+    void findByUserIdAndType_shouldFilter() {
+        List<Task> trash = taskRepository.findByUserIdAndType(user.getId(), TypeTask.TRASH);
+
+        assertThat(trash).hasSize(1)
+                .extracting(Task::getName)
+                .containsExactly("B");
+    }
+
+    @Test
+    @DisplayName("deleteByUserIdAndType — удаляет только задачи указанного типа пользователя")
+    void deleteByUserIdAndType_shouldDelete() {
+        int deleted = taskRepository.deleteByUserIdAndType(user.getId(), TypeTask.TRASH);
+
+        assertThat(deleted).isEqualTo(1);
+        assertThat(taskRepository.findByUserId(user.getId())).hasSize(1);
+        assertThat(taskRepository.findByUserId(other.getId())).hasSize(1);
+    }
+}
+EOF
+
+# =========================================================
+# 6. TaskDtoTest.java
+# =========================================================
+cat > "$TEST_JAVA/dto/TaskDtoTest.java" <<'EOF'
+package com.God.sRecords.one.dto;
+
+import com.God.sRecords.one.model.Task;
+import com.God.sRecords.one.model.TypeTask;
+import com.God.sRecords.one.regestration.model.User;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class TaskDtoTest {
+
+    @Test
+    @DisplayName("from — корректно маппит поля Task → DTO")
+    void from_shouldMapAllFields() {
+        User user = new User("Иван", "ivan@mail.com", "x");
+        user.setId(1L);
+
+        Task task = new Task("Заголовок", "Тело", user);
+        task.setId(42L);
+        task.setType(TypeTask.ARCHIVED);
+
+        TaskDto dto = TaskDto.from(task);
+
+        assertThat(dto.getId()).isEqualTo(42L);
+        assertThat(dto.getName()).isEqualTo("Заголовок");
+        assertThat(dto.getBody()).isEqualTo("Тело");
+        assertThat(dto.getType()).isEqualTo(TypeTask.ARCHIVED);
+    }
+}
+EOF
+
+# =========================================================
+# 7. OneApplicationTests.java (перезаписываем)
+# =========================================================
+cat > "$TEST_JAVA/OneApplicationTests.java" <<'EOF'
+package com.God.sRecords.one;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+@SpringBootTest
+@ActiveProfiles("test")
+class OneApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+}
+EOF
+
+# =========================================================
+# 8. application-test.properties
+# =========================================================
+cat > "$TEST_RES/application-test.properties" <<'EOF'
+# H2 in-memory для тестов
+spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=false
+
+spring.main.banner-mode=off
+logging.level.org.springframework=WARN
+EOF
+
+echo ""
+echo "✅ Готово! Создано:"
+echo "   - $TEST_JAVA/service/TaskServiceTest.java"
+echo "   - $TEST_JAVA/controller/ApiControllerTest.java"
+echo "   - $TEST_JAVA/regestration/controller/AuthViewControllerTest.java"
+echo "   - $TEST_JAVA/regestration/service/CustomUserDetailsServiceTest.java"
+echo "   - $TEST_JAVA/repository/TaskRepositoryTest.java"
+echo "   - $TEST_JAVA/dto/TaskDtoTest.java"
+echo "   - $TEST_JAVA/OneApplicationTests.java (обновлён)"
+echo "   - $TEST_RES/application-test.properties"
+echo ""
+echo "👉 Откройте проект в IDEA и нажмите 'Reload All Maven Projects', затем запустите тесты."

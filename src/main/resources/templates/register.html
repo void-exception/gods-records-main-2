@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+
+    <!-- CSRF-токен на случай, если отключение CSRF для /api/auth/** не сработает -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <style>
+        :root {
+            --bg-dark: #1b3322;
+            --panel-bg: #23442d;
+            --input-bg: #d2d2d2;
+            --text-color: #ffffff;
+            --text-muted: #a0b0a0;
+            --btn-bg: #24352a;
+            --btn-hover: #2f4537;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .login-container {
+            background-color: var(--panel-bg);
+            padding: 40px 30px;
+            border-radius: 24px;
+            text-align: center;
+            width: 360px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
+
+        .login-container h1 {
+            margin: 0 0 25px 0;
+            font-size: 32px;
+            font-weight: normal;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            box-sizing: border-box;
+            border: none;
+            border-radius: 12px;
+            background-color: var(--input-bg);
+            color: #111111;
+            font-size: 16px;
+        }
+
+        .input-field::placeholder {
+            color: #555555;
+        }
+
+        .input-field:focus {
+            outline: 2px solid #5a8a68;
+        }
+
+        .hint {
+            display: block;
+            color: var(--text-muted);
+            font-size: 11px;
+            margin-top: 5px;
+            padding: 0 4px;
+            line-height: 1.3;
+        }
+
+        .submit-btn {
+            background-color: var(--btn-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 30px;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s, opacity 0.2s;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--btn-hover);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .message {
+            width: 360px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .error {
+            background-color: #5c2626;
+            color: #ffcdd2;
+            border: 1px solid #d32f2f;
+        }
+
+        .success {
+            background-color: #1c4427;
+            color: #c8e6c9;
+            border: 1px solid #388e3c;
+        }
+
+        .link-login {
+            margin-top: 25px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .link-login a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .link-login a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Контейнеры для вывода сообщений об ошибках/успехе регистрации -->
+<div id="errorBox" class="message error" style="display:none;"></div>
+<div id="successBox" class="message success" style="display:none;"></div>
+
+<div class="login-container">
+    <h1>Регистрация</h1>
+
+    <form id="registerForm" novalidate>
+        <div class="input-group">
+            <input type="email" id="email" name="email" class="input-field" placeholder="Эл.почта..." required autofocus />
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="name" name="name" class="input-field" placeholder="Имя..." required minlength="2" />
+        </div>
+
+        <div class="input-group">
+            <input type="password" id="password" name="password" class="input-field" placeholder="Пароль..." required minlength="8" />
+            <span class="hint">Минимум 8 символов, одна заглавная буква и одна цифра</span>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Зарегистрироваться</button>
+    </form>
+
+    <div class="link-login">
+        Уже есть аккаунт? <a th:href="@{/login}">Войти</a>
+    </div>
+</div>
+
+<script>
+    const csrfToken  = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+    const form       = document.getElementById('registerForm');
+    const errorBox   = document.getElementById('errorBox');
+    const successBox = document.getElementById('successBox');
+    const submitBtn  = document.getElementById('submitBtn');
+
+    // ====== Вспомогательные ======
+    function showError(msg) {
+        successBox.style.display = 'none';
+        errorBox.textContent = msg;
+        errorBox.style.display = 'block';
+    }
+
+    function showSuccess(msg) {
+        errorBox.style.display = 'none';
+        successBox.textContent = msg;
+        successBox.style.display = 'block';
+    }
+
+    function hideMessages() {
+        errorBox.style.display = 'none';
+        successBox.style.display = 'none';
+    }
+
+    // Человеческое сообщение по HTTP-коду, если сервер не прислал своё
+    function humanMessage(status) {
+        switch (status) {
+            case 400: return 'Некорректные данные — проверьте email, имя и пароль.';
+            case 401: return 'Требуется авторизация. Попробуйте войти.';
+            case 403: return 'Доступ запрещён. Возможно, истекла сессия — обновите страницу.';
+            case 404: return 'Сервис регистрации не найден. Проверьте адрес или свяжитесь с администратором.';
+            case 409: return 'Пользователь с таким email уже существует.';
+            case 422: return 'Данные не прошли проверку. Проверьте формат полей.';
+            case 429: return 'Слишком много попыток. Подождите немного и попробуйте снова.';
+            case 500: return 'Внутренняя ошибка сервера. Попробуйте позже.';
+            case 502:
+            case 503:
+            case 504: return 'Сервер временно недоступен. Попробуйте чуть позже.';
+            default:
+                if (status >= 500) return 'Сервер не может обработать запрос. Попробуйте позже.';
+                return `Не удалось зарегистрироваться (код ${status}). Попробуйте ещё раз.`;
+        }
+    }
+
+    // Пытаемся вытащить сообщение из тела ответа в разных форматах
+    function extractServerMessage(data) {
+        if (!data) return null;
+        if (typeof data === 'string' && data.trim()) return data.trim();
+        if (typeof data !== 'object') return null;
+
+        // Spring Boot часто кладёт текст в message / error / detail
+        const candidates = [data.message, data.error, data.detail, data.title];
+        for (const c of candidates) {
+            if (typeof c === 'string' && c.trim()) return c.trim();
+        }
+        // Bean Validation: errors: { field: "msg", ... } или массив
+        if (data.errors) {
+            if (Array.isArray(data.errors)) {
+                const arr = data.errors.map(e => e.defaultMessage || e.message || String(e)).filter(Boolean);
+                if (arr.length) return arr.join('; ');
+            } else if (typeof data.errors === 'object') {
+                const arr = Object.values(data.errors).filter(Boolean);
+                if (arr.length) return arr.join('; ');
+            }
+        }
+        return null;
+    }
+
+    // Клиентская валидация — быстрая обратная связь без похода на сервер
+    function validateClientSide({ email, name, password }) {
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return 'Введите корректный email.';
+        }
+        if (!name || name.trim().length < 2) {
+            return 'Имя должно содержать минимум 2 символа.';
+        }
+        if (!password || password.length < 8) {
+            return 'Пароль должен содержать минимум 8 символов.';
+        }
+        if (!/[A-ZА-ЯЁ]/.test(password)) {
+            return 'В пароле должна быть хотя бы одна заглавная буква.';
+        }
+        if (!/\d/.test(password)) {
+            return 'В пароле должна быть хотя бы одна цифра.';
+        }
+        return null;
+    }
+
+    // ====== Обработка submit ======
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideMessages();
+
+        const payload = {
+            email:    document.getElementById('email').value.trim(),
+            name:     document.getElementById('name').value.trim(),
+            password: document.getElementById('password').value
+        };
+
+        // Клиентская проверка
+        const clientErr = validateClientSide(payload);
+        if (clientErr) {
+            showError(clientErr);
+            return;
+        }
+
+        // Блокируем кнопку, чтобы не было двойной отправки
+        submitBtn.disabled = true;
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Отправка...';
+
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(payload)
+            });
+
+            // Пробуем распарсить тело один раз — и для ошибок, и для успеха.
+            let data = null;
+            const ct = (res.headers.get('content-type') || '').toLowerCase();
+            if (ct.includes('application/json') || ct.includes('+json')) {
+                try { data = await res.json(); } catch (_) { data = null; }
+            } else {
+                try {
+                    const text = await res.text();
+                    if (text && text.trim()) data = text.trim();
+                } catch (_) { data = null; }
+            }
+
+            // 2xx = успех. Не завязываемся строго на 201.
+            if (res.ok) {
+                showSuccess('Аккаунт создан! Сейчас перенаправим на страницу входа…');
+                setTimeout(() => window.location.href = '/login', 1000);
+                return;
+            }
+
+            // Ошибка — сначала серверное сообщение, потом наш «человеческий» текст по коду
+            const serverMsg = extractServerMessage(data);
+            const message = serverMsg
+                ? (res.status === 409 && !/email|exist|существует/i.test(serverMsg)
+                    ? serverMsg + ' (возможно, этот email уже занят)'
+                    : serverMsg)
+                : humanMessage(res.status);
+
+            showError(message);
+
+        } catch (err) {
+            // fetch упал — сеть, DNS, CORS, offline
+            if (err && err.name === 'TypeError') {
+                showError('Не удалось связаться с сервером. Проверьте интернет-соединение и повторите попытку.');
+            } else if (err && err.name === 'AbortError') {
+                showError('Запрос был отменён. Попробуйте ещё раз.');
+            } else {
+                showError('Что-то пошло не так: ' + (err && err.message ? err.message : 'неизвестная ошибка'));
+            }
+            console.error('Ошибка регистрации:', err);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+</script>
+
+</body>
+</html>

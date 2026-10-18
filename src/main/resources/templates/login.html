@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Log in</title>
+    <style>
+        :root {
+            --bg-dark: #1b3322;
+            --panel-bg: #23442d;
+            --input-bg: #d2d2d2;
+            --text-color: #ffffff;
+            --text-muted: #a0b0a0;
+            --btn-bg: #24352a;
+            --btn-hover: #2f4537;
+        }
+
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: var(--bg-dark); 
+            color: var(--text-color);
+            margin: 0; 
+            padding: 0; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .login-container {
+            background-color: var(--panel-bg);
+            padding: 40px 30px;
+            border-radius: 24px;
+            text-align: center;
+            width: 340px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
+
+        .login-container h1 { 
+            margin: 0 0 25px 0; 
+            font-size: 36px;
+            font-weight: normal;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        .input-field { 
+            width: 100%; 
+            padding: 12px 16px; 
+            box-sizing: border-box; 
+            border: none;
+            border-radius: 12px;
+            background-color: var(--input-bg);
+            color: #111111;
+            font-size: 16px;
+        }
+
+        .input-field::placeholder {
+            color: #555555;
+        }
+
+        .input-field:focus {
+            outline: 2px solid #5a8a68;
+        }
+
+        .forgot-btn { 
+            display: block; 
+            color: var(--text-muted); 
+            font-size: 13px; 
+            text-decoration: none;
+            text-align: left;
+            margin: -6px 0 24px 4px;
+        }
+
+        .forgot-btn:hover {
+            color: var(--text-color);
+        }
+
+        .submit-btn { 
+            background-color: var(--btn-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 36px; 
+            border-radius: 20px; 
+            font-size: 16px;
+            cursor: pointer; 
+            transition: background-color 0.2s;
+        }
+
+        .submit-btn:hover { 
+            background-color: var(--btn-hover);
+        }
+
+        .message {
+            max-width: 340px;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .error { 
+            background-color: #5c2626;
+            color: #ffcdd2; 
+            border: 1px solid #d32f2f;
+        }
+        
+        .success { 
+            background-color: #1c4427;
+            color: #c8e6c9; 
+            border: 1px solid #388e3c;
+        }
+
+        .link-register { 
+            margin-top: 25px; 
+            font-size: 13px; 
+            color: var(--text-muted);
+        }
+
+        .link-register a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .link-register a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Всплывающие уведомления состояния Thymeleaf над формой -->
+<div class="message error" th:if="${param.error}">
+    Неверный email или пароль
+</div>
+
+<div class="message success" th:if="${param.logout}">
+    Вы успешно вышли из системы
+</div>
+
+<div class="login-container">
+    <h1>Вход</h1>
+
+    <form th:action="@{/login}" method="post">
+        <div class="input-group">
+            <input type="email" id="username" name="username" class="input-field" placeholder="Эл.почта..." required autofocus />
+        </div>
+
+        <div class="input-group">
+            <input type="password" id="password" name="password" class="input-field" placeholder="Пароль..." required />
+        </div>
+
+        <a href="#" class="forgot-btn">Забыли пароль?</a>
+
+        <button type="submit" class="submit-btn">Войти</button>
+    </form>
+
+    <div class="link-register">
+        Нет аккаунта? <a th:href="@{/register}">Зарегистрироваться</a>
+    </div>
+</div>
+
+</body>
+</html>
