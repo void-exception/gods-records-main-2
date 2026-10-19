@@ -3,6 +3,7 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Заметка</title>
 
     <meta name="_csrf" th:content="${_csrf.token}"/>
@@ -22,6 +23,10 @@
             --btn-cancel-hover: #5e3535;
         }
 
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background-color: var(--bg-dark);
@@ -32,7 +37,7 @@
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
-            box-sizing: border-box;
+            min-height: 100dvh;
         }
 
         .app-container {
@@ -42,7 +47,6 @@
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            box-sizing: border-box;
         }
 
         .topbar {
@@ -50,6 +54,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .topbar a {
@@ -57,6 +63,10 @@
             text-decoration: none;
             font-size: 14px;
             transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            min-height: 32px;
+            padding: 4px 0;
         }
 
         .topbar a:hover {
@@ -65,14 +75,23 @@
 
         h1 {
             margin: 10px 0;
-            font-size: 28px;
+            font-size: clamp(22px, 6vw, 28px);
             font-weight: normal;
+            line-height: 1.25;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .meta {
             color: var(--text-muted);
             font-size: 13px;
             margin-bottom: 20px;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .meta span {
+            white-space: nowrap; /* дата не рвётся посередине */
         }
 
         .body {
@@ -83,6 +102,8 @@
             padding: 20px;
             border-radius: 15px;
             font-size: 16px;
+            overflow-wrap: anywhere;   /* длинные слова/ссылки не рвут карточку */
+            word-break: break-word;
         }
 
         hr {
@@ -108,14 +129,15 @@
         input[type=text], textarea {
             width: 100%;
             padding: 12px;
-            box-sizing: border-box;
             margin-top: 6px;
             border: none;
             border-radius: 10px;
             background-color: var(--input-bg);
             color: #111111;
-            font-size: 15px;
+            font-size: 16px; /* 16px — iOS не зумит при фокусе */
             font-family: inherit;
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         textarea {
@@ -123,10 +145,12 @@
             resize: vertical;
         }
 
+        /* ====== Кнопки действий ====== */
         .actions {
             margin-top: 25px;
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .actions button {
@@ -138,9 +162,12 @@
             font-size: 16px;
             cursor: pointer;
             transition: background-color 0.2s;
+            min-height: 44px;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .actions button:hover {
+        .actions button:hover,
+        .actions button:active {
             background-color: var(--btn-hover);
         }
 
@@ -148,11 +175,11 @@
             background-color: var(--btn-cancel);
         }
 
-        .actions button.cancel:hover {
+        .actions button.cancel:hover,
+        .actions button.cancel:active {
             background-color: var(--btn-cancel-hover);
         }
 
-        /* Кнопка «Редактировать» в режиме чтения */
         .edit-open-btn {
             background-color: var(--btn-submit);
             color: var(--text-color);
@@ -162,9 +189,12 @@
             font-size: 16px;
             cursor: pointer;
             transition: background-color 0.2s;
+            min-height: 44px;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .edit-open-btn:hover {
+        .edit-open-btn:hover,
+        .edit-open-btn:active {
             background-color: var(--btn-hover);
         }
 
@@ -172,6 +202,79 @@
 
         #error { color: #ff6b6b; margin-top: 12px; font-size: 14px; }
         #success { color: #69db7c; margin-top: 12px; font-size: 14px; }
+
+        /* ================================================
+           Адаптив
+           ================================================ */
+
+        /* --- ≤ 600px: планшеты/телефоны --- */
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .app-container {
+                padding: 20px;
+                border-radius: 16px;
+            }
+
+            .body {
+                padding: 16px;
+                border-radius: 12px;
+                font-size: 15.5px;
+            }
+
+            /* Кнопки растягиваем на всю ширину и делим пополам */
+            .actions button {
+                flex: 1 1 0;
+                padding: 12px 16px;
+                min-width: 0;
+            }
+
+            .edit-open-btn {
+                display: block;
+                width: 100%;
+                padding: 14px 20px;
+                font-size: 16px;
+            }
+
+            h3 {
+                font-size: 18px;
+            }
+        }
+
+        /* --- ≤ 400px: очень узкие экраны --- */
+        @media (max-width: 400px) {
+            body { padding: 12px 8px; }
+            .app-container {
+                padding: 16px;
+                border-radius: 12px;
+            }
+            .body { padding: 14px; }
+            .actions { gap: 8px; }
+            .actions button {
+                padding: 12px 10px;
+                font-size: 15px;
+            }
+            textarea { min-height: 100px; }
+        }
+
+        /* --- Ландшафт низких телефонов --- */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding: 12px;
+                align-items: stretch;
+            }
+            .app-container {
+                padding: 16px;
+                max-width: 100%;
+            }
+            .body {
+                padding: 14px;
+                margin-bottom: 16px;
+            }
+            textarea { min-height: 80px; }
+        }
     </style>
 </head>
 <body>
@@ -184,7 +287,6 @@
     <!-- ====== Режим чтения ====== -->
     <div id="readView">
         <h1 id="title">Загрузка…</h1>
-        
 
         <div class="body" id="body"></div>
 
@@ -234,7 +336,6 @@
 
     // ====== Переключение режимов ======
     function openEdit() {
-        // На случай если в форме остались старые значения — перезаполняем из задачи
         document.getElementById('editView').classList.remove('hidden');
         document.getElementById('readView').classList.add('hidden');
         errorBox.textContent = '';

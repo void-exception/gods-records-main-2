@@ -3,6 +3,7 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gods records</title>
 
     <meta name="_csrf" th:content="${_csrf.token}"/>
@@ -19,6 +20,10 @@
             --accent: #4caf50;
         }
 
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background-color: var(--bg-dark);
@@ -29,7 +34,7 @@
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
-            box-sizing: border-box;
+            min-height: 100dvh;
         }
 
         .app-container {
@@ -39,15 +44,17 @@
             border-radius: 12px;
             padding: 25px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            box-sizing: border-box;
         }
 
+        /* ====== Верхняя панель ====== */
         .topbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding-bottom: 15px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .topbar h2 {
@@ -59,38 +66,42 @@
         .user-section {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             color: var(--text-muted);
             font-size: 14px;
+            flex-wrap: wrap;
         }
 
         .logout-btn {
             background: transparent;
             border: 1px solid rgba(255,255,255,0.2);
             color: var(--text-color);
-            padding: 4px 10px;
+            padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
             transition: 0.2s;
+            min-height: 32px;
         }
 
         .logout-btn:hover {
             background: rgba(255,255,255,0.1);
         }
 
+        /* ====== Строка управления ====== */
         .controls-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin: 20px 0;
+            gap: 12px;
         }
 
         .toolbar {
             display: flex;
-            gap: 20px;
+            gap: 10px;
             background-color: rgba(0,0,0,0.15);
-            padding: 6px 20px;
+            padding: 6px 16px;
             border-radius: 20px;
         }
 
@@ -102,12 +113,16 @@
             font-size: 18px;
             display: flex;
             align-items: center;
+            justify-content: center;
             opacity: 0.7;
-            padding: 4px 10px;
+            padding: 6px 10px;
             border-radius: 8px;
+            min-width: 36px;
+            min-height: 36px;
             transition: opacity 0.2s, transform 0.15s, background 0.2s, outline-color 0.15s;
             outline: 2px dashed transparent;
             outline-offset: 2px;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .tool-btn:hover {
@@ -119,7 +134,6 @@
             filter: drop-shadow(0 0 4px var(--accent));
         }
 
-        /* Состояние «над кнопкой тащат карточку» */
         .tool-btn.drag-over {
             opacity: 1;
             transform: scale(1.2);
@@ -127,7 +141,6 @@
             outline-color: var(--accent);
         }
 
-        /* Нельзя дропнуть туда, где уже находимся */
         .tool-btn.drop-disabled {
             background-color: rgba(255, 107, 107, 0.25);
             outline-color: #ff6b6b;
@@ -137,25 +150,28 @@
             background: var(--card-bg);
             border: none;
             color: var(--text-color);
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            font-size: 18px;
+            font-size: 22px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: background 0.2s;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .add-icon-btn:hover {
             background: #347047;
         }
 
-        /* Кнопка «Очистить корзину» — отдельная строка под тулбаром, выравнивание по правому краю */
+        /* ====== Очистка корзины ====== */
         .trash-actions {
             justify-content: flex-end;
             margin: -10px 0 20px 0;
+            display: flex;
         }
 
         .trash-actions .logout-btn {
@@ -167,6 +183,7 @@
             background: rgba(255, 107, 107, 0.1);
         }
 
+        /* ====== Форма создания ====== */
         .create-box {
             background-color: rgba(0, 0, 0, 0.2);
             padding: 15px;
@@ -183,6 +200,9 @@
             padding: 10px;
             color: #111;
             font-family: inherit;
+            font-size: 16px;
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .create-box input { width: 25%; }
@@ -196,10 +216,14 @@
             border-radius: 6px;
             cursor: pointer;
             transition: background 0.2s;
+            font-size: 15px;
+            min-height: 40px;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .create-box button:hover { background: #347047; }
 
+        /* ====== Сетка заметок ====== */
         .notes-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -214,7 +238,6 @@
             border-radius: 12px;
             padding: 15px;
             position: relative;
-            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -236,11 +259,19 @@
             transform: rotate(2deg) scale(0.98);
         }
 
+        /* === Заголовок: максимум 2 строки с «...» === */
         .note-card h3 {
             margin: 0 0 6px 0;
+            padding-right: 0;             /* база = десктоп (⋮ там нет) */
             font-size: 15px;
             font-weight: normal;
             word-break: break-word;
+            overflow-wrap: anywhere;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;         /* не больше 2 строк */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .note-card h3 a {
@@ -252,14 +283,15 @@
             text-decoration: underline;
         }
 
+        /* === Текст: максимум 3 строки с «...» === */
         .note-card p {
             margin: 0;
             font-size: 13px;
             color: #c0dac8;
             overflow: hidden;
-            text-overflow: ellipsis;
+            overflow-wrap: anywhere;
             display: -webkit-box;
-            -webkit-line-clamp: 4;
+            -webkit-line-clamp: 3;         /* было 4 → 3 */
             -webkit-box-orient: vertical;
             line-height: 1.4;
         }
@@ -272,12 +304,207 @@
             color: var(--text-muted);
         }
 
+        /* ====== Кнопка «⋮» — только на тач-устройствах ====== */
+        .card-menu-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: rgba(0,0,0,0.25);
+            border: none;
+            color: white;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            display: none;                 /* по умолчанию (десктоп) скрыта */
+            transition: background 0.15s;
+            z-index: 2;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card-menu-btn:hover {
+            background: rgba(0,0,0,0.45);
+        }
+
+        /* Показываем ⋮ только там, где нет hover (телефоны/планшеты),
+           и заодно резервируем место под неё в заголовке */
+        @media (hover: none) {
+            .card-menu-btn {
+                display: flex;
+            }
+            .note-card h3 {
+                padding-right: 30px;
+            }
+        }
+
+        .card-menu {
+            position: absolute;
+            top: 40px;
+            right: 8px;
+            background: #1b3322;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            min-width: 150px;
+        }
+
+        .card-menu button {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 13px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            min-height: 36px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card-menu button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
         .empty-text {
             color: var(--text-muted);
             font-size: 14px;
             text-align: center;
             grid-column: 1 / -1;
             padding: 40px 0;
+        }
+
+        /* ================================================
+           Адаптив (мобильные)
+           ================================================ */
+
+        /* --- ≤ 640px --- */
+        @media (max-width: 640px) {
+            body {
+                padding: 12px;
+            }
+
+            .app-container {
+                padding: 18px;
+                border-radius: 10px;
+            }
+
+            .topbar h2 { font-size: 20px; }
+
+            .user-section {
+                font-size: 13px;
+                gap: 8px;
+            }
+
+            .create-box {
+                flex-direction: column;
+                gap: 8px;
+                padding: 12px;
+            }
+
+            .create-box input,
+            .create-box textarea {
+                width: 100%;
+                flex: none;
+                min-height: 40px;
+            }
+
+            .create-box textarea {
+                min-height: 64px;
+                resize: vertical;
+            }
+
+            .create-box button {
+                align-self: stretch;
+                padding: 12px 20px;
+                min-height: 44px;
+            }
+
+            .notes-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                gap: 12px;
+            }
+
+            .note-card {
+                height: auto;
+                min-height: 140px;
+                padding: 12px;
+            }
+
+            .tool-btn {
+                font-size: 20px;
+                min-width: 42px;
+                min-height: 42px;
+                padding: 8px 12px;
+            }
+
+            .add-icon-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 24px;
+            }
+
+            .logout-btn {
+                min-height: 36px;
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+
+            .card-menu {
+                right: 8px;
+                top: 38px;
+            }
+        }
+
+        /* --- ≤ 400px --- */
+        @media (max-width: 400px) {
+            body { padding: 8px; }
+            .app-container {
+                padding: 14px;
+                border-radius: 8px;
+            }
+            .topbar h2 { font-size: 18px; }
+            .notes-grid {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 10px;
+            }
+            .note-card {
+                min-height: 130px;
+                padding: 10px;
+            }
+            .note-card h3 {
+                font-size: 14px;
+            }
+            .note-card p {
+                font-size: 12px;
+                -webkit-line-clamp: 3;
+            }
+            .toolbar { padding: 4px 10px; }
+            .tool-btn {
+                min-width: 38px;
+                min-height: 38px;
+                padding: 6px 8px;
+                font-size: 18px;
+            }
+        }
+
+        /* --- Ландшафт низких телефонов --- */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body { padding: 10px; }
+            .app-container { padding: 14px; }
+            .controls-row { margin: 12px 0; }
+            .create-box { margin-bottom: 14px; }
+            .note-card { min-height: 110px; }
+            .note-card p { -webkit-line-clamp: 2; }
         }
     </style>
 </head>
@@ -287,25 +514,22 @@
     <div class="topbar">
         <h2>Gods records</h2>
         <div class="user-section">
-            <div>Привет, <span sec:authentication="name">user</span>!</div>
             <form th:action="@{/logout}" method="post" style="margin:0;">
                 <button type="submit" class="logout-btn">Выйти</button>
             </form>
         </div>
     </div>
 
-    <!-- Верхний ряд: + слева, тулбар справа. Тулбар всегда на своём месте. -->
     <div class="controls-row">
-        <button class="add-icon-btn" onclick="toggleCreateBox()" title="Новая заметка">＋</button>
+        <button class="add-icon-btn" onclick="toggleCreateBox()" title="Новая заметка" aria-label="Новая заметка">＋</button>
 
         <div class="toolbar">
-            <button data-type="NORMAL"   class="tool-btn active" title="Обычные заметки">📄</button>
-            <button data-type="ARCHIVED" class="tool-btn"        title="Архив">📦</button>
-            <button data-type="TRASH"    class="tool-btn"        title="Корзина">🗑️</button>
+            <button data-type="NORMAL"   class="tool-btn active" title="Обычные заметки" aria-label="Обычные">📄</button>
+            <button data-type="ARCHIVED" class="tool-btn"        title="Архив"           aria-label="Архив">📦</button>
+            <button data-type="TRASH"    class="tool-btn"        title="Корзина"         aria-label="Корзина">🗑️</button>
         </div>
     </div>
 
-    <!-- Кнопка очистки корзины — отдельная строка ниже, появляется только в TRASH -->
     <div id="trashActions" class="trash-actions" style="display:none;">
         <button id="clearTrashBtn" class="logout-btn">Очистить корзину</button>
     </div>
@@ -325,16 +549,19 @@
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
 
     let currentType = 'NORMAL';
-
-    // Задача, которую сейчас тащат (устанавливается в dragstart)
     let draggedTask = null;
+
+    const TYPE_LABELS = {
+        NORMAL:   '📄 Обычные',
+        ARCHIVED: '📦 В архив',
+        TRASH:    '🗑️ В корзину'
+    };
 
     function toggleCreateBox() {
         const box = document.getElementById('createBox');
         box.style.display = box.style.display === 'none' ? 'flex' : 'none';
     }
 
-    // ====== Загрузка списка заметок ======
     async function loadTasks() {
         const res = await fetch('/api/all/type?type=' + currentType);
         if (!res.ok) {
@@ -347,7 +574,6 @@
         const empty = document.getElementById('emptyMsg');
         list.innerHTML = '';
 
-        // Блок «Очистить корзину» показываем только во вкладке TRASH
         document.getElementById('trashActions').style.display =
             currentType === 'TRASH' ? 'flex' : 'none';
 
@@ -357,41 +583,82 @@
         }
         empty.style.display = 'none';
 
-        tasks.forEach(t => {
-            const card = document.createElement('div');
-            card.className = 'note-card';
-            card.draggable = true;
+        tasks.forEach(t => list.appendChild(buildCard(t)));
+    }
 
-            // Никаких чекбоксов — статус меняется только перетаскиванием
-            card.innerHTML = `
-                <h3>
-                    <a href="/task/${t.id}" draggable="false">${escapeHtml(t.name)}</a>
-                </h3>
-                <p>${escapeHtml(t.body ?? '')}</p>
-                <div class="card-meta">${new Date(t.createdAt).toLocaleDateString('ru-RU')}</div>
-            `;
+    function buildCard(t) {
+        const card = document.createElement('div');
+        card.className = 'note-card';
+        card.draggable = true;
 
-            // ====== Drag & Drop: источник ======
-            card.addEventListener('dragstart', (e) => {
-                draggedTask = t;
-                card.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', String(t.id));
+        card.innerHTML = `
+            <button class="card-menu-btn" type="button" title="Действия" aria-label="Действия">⋮</button>
+            <h3>
+                <a href="/task/${t.id}" draggable="false">${escapeHtml(t.name)}</a>
+            </h3>
+            <p>${escapeHtml(t.body ?? '')}</p>
+            <div class="card-meta">${new Date(t.createdAt).toLocaleDateString('ru-RU')}</div>
+            <div class="card-menu" style="display:none;"></div>
+        `;
+
+        const menuBtn = card.querySelector('.card-menu-btn');
+        const menu    = card.querySelector('.card-menu');
+
+        card.addEventListener('dragstart', (e) => {
+            draggedTask = t;
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(t.id));
+        });
+
+        card.addEventListener('dragend', () => {
+            card.classList.remove('dragging');
+            draggedTask = null;
+            document.querySelectorAll('.toolbar .tool-btn').forEach(b => {
+                b.classList.remove('drag-over', 'drop-disabled');
             });
+        });
 
-            card.addEventListener('dragend', () => {
-                card.classList.remove('dragging');
-                draggedTask = null;
-                document.querySelectorAll('.toolbar .tool-btn').forEach(b => {
-                    b.classList.remove('drag-over', 'drop-disabled');
-                });
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = menu.style.display === 'flex';
+            closeAllCardMenus();
+            if (!isOpen) {
+                buildMenuItems(menu, t);
+                menu.style.display = 'flex';
+            }
+        });
+
+        return card;
+    }
+
+    // Меню: только «куда можно переместить», без строки «Сейчас: …»
+    function buildMenuItems(menu, task) {
+        menu.innerHTML = '';
+        Object.keys(TYPE_LABELS).forEach(type => {
+            if (type === currentType) return;
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = TYPE_LABELS[type];
+            b.addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                closeAllCardMenus();
+                await changeType(task, type);
             });
-
-            list.appendChild(card);
+            menu.appendChild(b);
         });
     }
 
-    // ====== Создание заметки ======
+    function closeAllCardMenus() {
+        document.querySelectorAll('.card-menu').forEach(m => m.style.display = 'none');
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.card-menu-btn') && !e.target.closest('.card-menu')) {
+            closeAllCardMenus();
+        }
+    });
+
     async function submitCreateForm() {
         const nameInput = document.getElementById('name');
         const bodyInput = document.getElementById('body');
@@ -426,7 +693,6 @@
         }
     }
 
-    // ====== Смена статуса заметки ======
     async function changeType(task, newType) {
         const params = new URLSearchParams({
             name: task.name,
@@ -443,7 +709,6 @@
         else alert('Не удалось обновить статус: ' + res.status);
     }
 
-    // ====== Очистка корзины ======
     document.getElementById('clearTrashBtn').addEventListener('click', async () => {
         if (!confirm('Очистить корзину полностью? Это удалит все заметки из корзины.')) return;
 
@@ -460,18 +725,15 @@
         }
     });
 
-    // ====== Кнопки тулбара = вкладки + drop-зоны ======
     document.querySelectorAll('.toolbar .tool-btn').forEach(btn => {
         const targetType = btn.dataset.type;
 
-        // --- клик = переключение вкладки ---
         btn.addEventListener('click', () => {
             currentType = btn.dataset.type;
             highlightTab();
             loadTasks();
         });
 
-        // --- dragenter / dragleave: счётчик, чтобы не мигало ---
         let counter = 0;
 
         btn.addEventListener('dragenter', (e) => {
@@ -479,16 +741,13 @@
             if (!draggedTask) return;
             counter++;
             btn.classList.add('drag-over');
-            if (targetType === currentType) {
-                btn.classList.add('drop-disabled');
-            }
+            if (targetType === currentType) btn.classList.add('drop-disabled');
         });
 
         btn.addEventListener('dragover', (e) => {
             e.preventDefault();
             if (!draggedTask) return;
-            e.dataTransfer.dropEffect =
-                (targetType === currentType) ? 'none' : 'move';
+            e.dataTransfer.dropEffect = (targetType === currentType) ? 'none' : 'move';
         });
 
         btn.addEventListener('dragleave', () => {
@@ -509,7 +768,6 @@
 
             const task = draggedTask;
             draggedTask = null;
-
             await changeType(task, targetType);
         });
     });
@@ -520,7 +778,6 @@
         });
     }
 
-    // ====== Экранирование HTML ======
     function escapeHtml(s) {
         return String(s)
             .replaceAll('&', '&amp;')
@@ -530,7 +787,6 @@
             .replaceAll("'", '&#39;');
     }
 
-    // Старт
     loadTasks();
 </script>
 </body>

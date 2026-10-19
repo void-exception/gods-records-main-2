@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log in</title>
     <style>
         :root {
@@ -14,18 +15,22 @@
             --btn-hover: #2f4537;
         }
 
-        body { 
-            font-family: Arial, sans-serif; 
-            background-color: var(--bg-dark); 
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-dark);
             color: var(--text-color);
-            margin: 0; 
-            padding: 0; 
+            margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            box-sizing: border-box;
+            min-height: 100dvh; /* корректная высота на мобильных с адресной строкой */
         }
 
         .login-container {
@@ -33,14 +38,14 @@
             padding: 40px 30px;
             border-radius: 24px;
             text-align: center;
-            width: 340px;
+            width: 100%;
+            max-width: 340px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            box-sizing: border-box;
         }
 
-        .login-container h1 { 
-            margin: 0 0 25px 0; 
-            font-size: 36px;
+        .login-container h1 {
+            margin: 0 0 25px 0;
+            font-size: clamp(28px, 8vw, 36px);
             font-weight: normal;
         }
 
@@ -49,15 +54,16 @@
             text-align: left;
         }
 
-        .input-field { 
-            width: 100%; 
-            padding: 12px 16px; 
-            box-sizing: border-box; 
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
             border: none;
             border-radius: 12px;
             background-color: var(--input-bg);
             color: #111111;
-            font-size: 16px;
+            font-size: 16px; /* 16px предотвращает авто-зум в iOS Safari */
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .input-field::placeholder {
@@ -68,10 +74,10 @@
             outline: 2px solid #5a8a68;
         }
 
-        .forgot-btn { 
-            display: block; 
-            color: var(--text-muted); 
-            font-size: 13px; 
+        .forgot-btn {
+            display: block;
+            color: var(--text-muted);
+            font-size: 13px;
             text-decoration: none;
             text-align: left;
             margin: -6px 0 24px 4px;
@@ -81,22 +87,28 @@
             color: var(--text-color);
         }
 
-        .submit-btn { 
+        .submit-btn {
             background-color: var(--btn-bg);
             color: var(--text-color);
             border: none;
-            padding: 10px 36px; 
-            border-radius: 20px; 
+            padding: 12px 36px;
+            border-radius: 20px;
             font-size: 16px;
-            cursor: pointer; 
+            cursor: pointer;
             transition: background-color 0.2s;
+            width: 100%; /* на мобильных удобнее на всю ширину */
+            max-width: 220px;
+            min-height: 44px; /* минимальный размер тач-цели */
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .submit-btn:hover { 
+        .submit-btn:hover,
+        .submit-btn:active {
             background-color: var(--btn-hover);
         }
 
         .message {
+            width: 100%;
             max-width: 340px;
             padding: 10px;
             border-radius: 10px;
@@ -105,21 +117,21 @@
             text-align: center;
         }
 
-        .error { 
+        .error {
             background-color: #5c2626;
-            color: #ffcdd2; 
+            color: #ffcdd2;
             border: 1px solid #d32f2f;
         }
-        
-        .success { 
+
+        .success {
             background-color: #1c4427;
-            color: #c8e6c9; 
+            color: #c8e6c9;
             border: 1px solid #388e3c;
         }
 
-        .link-register { 
-            margin-top: 25px; 
-            font-size: 13px; 
+        .link-register {
+            margin-top: 25px;
+            font-size: 13px;
             color: var(--text-muted);
         }
 
@@ -131,6 +143,43 @@
 
         .link-register a:hover {
             text-decoration: underline;
+        }
+
+        /* --- Планшеты и небольшие экраны --- */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+            .login-container {
+                padding: 30px 22px;
+                border-radius: 20px;
+            }
+            .login-container h1 {
+                margin-bottom: 20px;
+            }
+            .submit-btn {
+                max-width: 100%;
+            }
+        }
+
+        /* --- Очень узкие экраны / компактные телефоны --- */
+        @media (max-width: 360px) {
+            .login-container {
+                padding: 24px 16px;
+                border-radius: 16px;
+            }
+            .input-field {
+                padding: 11px 14px;
+            }
+        }
+
+        /* --- Низкие экраны (ландшафт телефона) --- */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                justify-content: flex-start;
+                padding-top: 20px;
+                padding-bottom: 20px;
+            }
         }
     </style>
 </head>
@@ -156,8 +205,6 @@
         <div class="input-group">
             <input type="password" id="password" name="password" class="input-field" placeholder="Пароль..." required />
         </div>
-
-        <a href="#" class="forgot-btn">Забыли пароль?</a>
 
         <button type="submit" class="submit-btn">Войти</button>
     </form>
