@@ -1,422 +1,3 @@
-<!--<!DOCTYPE html>-->
-<!--<html xmlns:th="http://www.thymeleaf.org"-->
-<!--      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">-->
-<!--<head>-->
-<!--    <meta charset="UTF-8">-->
-<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-<!--    <title>Заметка</title>-->
-
-<!--    <meta name="_csrf" th:content="${_csrf.token}"/>-->
-<!--    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>-->
-
-<!--    <style>-->
-<!--        :root {-->
-<!--            &#45;&#45;bg-dark: #1b3322;-->
-<!--            &#45;&#45;panel-bg: #23442d;-->
-<!--            &#45;&#45;card-bg: #2a5c3a;-->
-<!--            &#45;&#45;input-bg: #cccccc;-->
-<!--            &#45;&#45;text-color: #ffffff;-->
-<!--            &#45;&#45;text-muted: #a0b0a0;-->
-<!--            &#45;&#45;btn-submit: #2a3d30;-->
-<!--            &#45;&#45;btn-hover: #344d3c;-->
-<!--            &#45;&#45;btn-cancel: #4a2a2a;-->
-<!--            &#45;&#45;btn-cancel-hover: #5e3535;-->
-<!--        }-->
-
-<!--        *, *::before, *::after {-->
-<!--            box-sizing: border-box;-->
-<!--        }-->
-
-<!--        body {-->
-<!--            font-family: Arial, sans-serif;-->
-<!--            background-color: var(&#45;&#45;bg-dark);-->
-<!--            color: var(&#45;&#45;text-color);-->
-<!--            margin: 0;-->
-<!--            padding: 40px 20px;-->
-<!--            display: flex;-->
-<!--            justify-content: center;-->
-<!--            align-items: flex-start;-->
-<!--            min-height: 100vh;-->
-<!--            min-height: 100dvh;-->
-<!--        }-->
-
-<!--        .app-container {-->
-<!--            width: 100%;-->
-<!--            max-width: 600px;-->
-<!--            background-color: var(&#45;&#45;panel-bg);-->
-<!--            border-radius: 20px;-->
-<!--            padding: 30px;-->
-<!--            box-shadow: 0 4px 15px rgba(0,0,0,0.3);-->
-<!--        }-->
-
-<!--        .topbar {-->
-<!--            display: flex;-->
-<!--            justify-content: space-between;-->
-<!--            align-items: center;-->
-<!--            margin-bottom: 20px;-->
-<!--            flex-wrap: wrap;-->
-<!--            gap: 8px;-->
-<!--        }-->
-
-<!--        .topbar a {-->
-<!--            color: var(&#45;&#45;text-muted);-->
-<!--            text-decoration: none;-->
-<!--            font-size: 14px;-->
-<!--            transition: color 0.2s;-->
-<!--            display: inline-flex;-->
-<!--            align-items: center;-->
-<!--            min-height: 32px;-->
-<!--            padding: 4px 0;-->
-<!--        }-->
-
-<!--        .topbar a:hover {-->
-<!--            color: var(&#45;&#45;text-color);-->
-<!--        }-->
-
-<!--        h1 {-->
-<!--            margin: 10px 0;-->
-<!--            font-size: clamp(22px, 6vw, 28px);-->
-<!--            font-weight: normal;-->
-<!--            line-height: 1.25;-->
-<!--            word-break: break-word;-->
-<!--            overflow-wrap: anywhere;-->
-<!--        }-->
-
-<!--        .meta {-->
-<!--            color: var(&#45;&#45;text-muted);-->
-<!--            font-size: 13px;-->
-<!--            margin-bottom: 20px;-->
-<!--            line-height: 1.5;-->
-<!--            word-break: break-word;-->
-<!--        }-->
-
-<!--        .meta span {-->
-<!--            white-space: nowrap; /* дата не рвётся посередине */-->
-<!--        }-->
-
-<!--        .body {-->
-<!--            white-space: pre-wrap;-->
-<!--            line-height: 1.6;-->
-<!--            margin-bottom: 25px;-->
-<!--            background-color: var(&#45;&#45;card-bg);-->
-<!--            padding: 20px;-->
-<!--            border-radius: 15px;-->
-<!--            font-size: 16px;-->
-<!--            overflow-wrap: anywhere;   /* длинные слова/ссылки не рвут карточку */-->
-<!--            word-break: break-word;-->
-<!--        }-->
-
-<!--        hr {-->
-<!--            border: none;-->
-<!--            border-top: 1px solid rgba(255, 255, 255, 0.1);-->
-<!--            margin: 25px 0;-->
-<!--        }-->
-
-<!--        h3 {-->
-<!--            font-weight: normal;-->
-<!--            font-size: 20px;-->
-<!--            margin-top: 0;-->
-<!--            margin-bottom: 15px;-->
-<!--        }-->
-
-<!--        label {-->
-<!--            display: block;-->
-<!--            margin-top: 15px;-->
-<!--            font-size: 14px;-->
-<!--            color: var(&#45;&#45;text-muted);-->
-<!--        }-->
-
-<!--        input[type=text], textarea {-->
-<!--            width: 100%;-->
-<!--            padding: 12px;-->
-<!--            margin-top: 6px;-->
-<!--            border: none;-->
-<!--            border-radius: 10px;-->
-<!--            background-color: var(&#45;&#45;input-bg);-->
-<!--            color: #111111;-->
-<!--            font-size: 16px; /* 16px — iOS не зумит при фокусе */-->
-<!--            font-family: inherit;-->
-<!--            -webkit-appearance: none;-->
-<!--            appearance: none;-->
-<!--        }-->
-
-<!--        textarea {-->
-<!--            min-height: 120px;-->
-<!--            resize: vertical;-->
-<!--        }-->
-
-<!--        /* ====== Кнопки действий ====== */-->
-<!--        .actions {-->
-<!--            margin-top: 25px;-->
-<!--            display: flex;-->
-<!--            gap: 10px;-->
-<!--            flex-wrap: wrap;-->
-<!--        }-->
-
-<!--        .actions button {-->
-<!--            background-color: var(&#45;&#45;btn-submit);-->
-<!--            color: var(&#45;&#45;text-color);-->
-<!--            border: none;-->
-<!--            padding: 12px 30px;-->
-<!--            border-radius: 15px;-->
-<!--            font-size: 16px;-->
-<!--            cursor: pointer;-->
-<!--            transition: background-color 0.2s;-->
-<!--            min-height: 44px;-->
-<!--            -webkit-tap-highlight-color: transparent;-->
-<!--        }-->
-
-<!--        .actions button:hover,-->
-<!--        .actions button:active {-->
-<!--            background-color: var(&#45;&#45;btn-hover);-->
-<!--        }-->
-
-<!--        .actions button.cancel {-->
-<!--            background-color: var(&#45;&#45;btn-cancel);-->
-<!--        }-->
-
-<!--        .actions button.cancel:hover,-->
-<!--        .actions button.cancel:active {-->
-<!--            background-color: var(&#45;&#45;btn-cancel-hover);-->
-<!--        }-->
-
-<!--        .edit-open-btn {-->
-<!--            background-color: var(&#45;&#45;btn-submit);-->
-<!--            color: var(&#45;&#45;text-color);-->
-<!--            border: none;-->
-<!--            padding: 12px 30px;-->
-<!--            border-radius: 15px;-->
-<!--            font-size: 16px;-->
-<!--            cursor: pointer;-->
-<!--            transition: background-color 0.2s;-->
-<!--            min-height: 44px;-->
-<!--            -webkit-tap-highlight-color: transparent;-->
-<!--        }-->
-
-<!--        .edit-open-btn:hover,-->
-<!--        .edit-open-btn:active {-->
-<!--            background-color: var(&#45;&#45;btn-hover);-->
-<!--        }-->
-
-<!--        .hidden { display: none !important; }-->
-
-<!--        #error { color: #ff6b6b; margin-top: 12px; font-size: 14px; }-->
-<!--        #success { color: #69db7c; margin-top: 12px; font-size: 14px; }-->
-
-<!--        /* ================================================-->
-<!--           Адаптив-->
-<!--           ================================================ */-->
-
-<!--        /* -&#45;&#45; ≤ 600px: планшеты/телефоны -&#45;&#45; */-->
-<!--        @media (max-width: 600px) {-->
-<!--            body {-->
-<!--                padding: 20px 12px;-->
-<!--            }-->
-
-<!--            .app-container {-->
-<!--                padding: 20px;-->
-<!--                border-radius: 16px;-->
-<!--            }-->
-
-<!--            .body {-->
-<!--                padding: 16px;-->
-<!--                border-radius: 12px;-->
-<!--                font-size: 15.5px;-->
-<!--            }-->
-
-<!--            /* Кнопки растягиваем на всю ширину и делим пополам */-->
-<!--            .actions button {-->
-<!--                flex: 1 1 0;-->
-<!--                padding: 12px 16px;-->
-<!--                min-width: 0;-->
-<!--            }-->
-
-<!--            .edit-open-btn {-->
-<!--                display: block;-->
-<!--                width: 100%;-->
-<!--                padding: 14px 20px;-->
-<!--                font-size: 16px;-->
-<!--            }-->
-
-<!--            h3 {-->
-<!--                font-size: 18px;-->
-<!--            }-->
-<!--        }-->
-
-<!--        /* -&#45;&#45; ≤ 400px: очень узкие экраны -&#45;&#45; */-->
-<!--        @media (max-width: 400px) {-->
-<!--            body { padding: 12px 8px; }-->
-<!--            .app-container {-->
-<!--                padding: 16px;-->
-<!--                border-radius: 12px;-->
-<!--            }-->
-<!--            .body { padding: 14px; }-->
-<!--            .actions { gap: 8px; }-->
-<!--            .actions button {-->
-<!--                padding: 12px 10px;-->
-<!--                font-size: 15px;-->
-<!--            }-->
-<!--            textarea { min-height: 100px; }-->
-<!--        }-->
-
-<!--        /* -&#45;&#45; Ландшафт низких телефонов -&#45;&#45; */-->
-<!--        @media (max-height: 500px) and (orientation: landscape) {-->
-<!--            body {-->
-<!--                padding: 12px;-->
-<!--                align-items: stretch;-->
-<!--            }-->
-<!--            .app-container {-->
-<!--                padding: 16px;-->
-<!--                max-width: 100%;-->
-<!--            }-->
-<!--            .body {-->
-<!--                padding: 14px;-->
-<!--                margin-bottom: 16px;-->
-<!--            }-->
-<!--            textarea { min-height: 80px; }-->
-<!--        }-->
-<!--    </style>-->
-<!--</head>-->
-<!--<body>-->
-
-<!--<div class="app-container">-->
-<!--    <div class="topbar">-->
-<!--        <div><a th:href="@{/home}">← К списку</a></div>-->
-<!--    </div>-->
-
-<!--    &lt;!&ndash; ====== Режим чтения ====== &ndash;&gt;-->
-<!--    <div id="readView">-->
-<!--        <h1 id="title">Загрузка…</h1>-->
-
-<!--        <div class="body" id="body"></div>-->
-
-<!--        <div class="meta">-->
-<!--            Создано: <span id="createdAt">?</span> ·-->
-<!--            Изменено: <span id="updatedAt">?</span>-->
-<!--        </div>-->
-
-<!--        <button type="button" class="edit-open-btn" onclick="openEdit()">Редактировать</button>-->
-<!--    </div>-->
-
-<!--    &lt;!&ndash; ====== Режим редактирования ====== &ndash;&gt;-->
-<!--    <div id="editView" class="hidden">-->
-<!--        <h3>Редактировать</h3>-->
-
-<!--        <form id="editForm">-->
-<!--            <label for="name">Заголовок</label>-->
-<!--            <input type="text" id="name" required />-->
-
-<!--            <label for="bodyInput">Текст</label>-->
-<!--            <textarea id="bodyInput"></textarea>-->
-
-<!--            <div class="actions">-->
-<!--                <button type="submit">Сохранить</button>-->
-<!--                <button type="button" class="cancel" onclick="closeEdit()">Отмена</button>-->
-<!--            </div>-->
-
-<!--            <div id="error"></div>-->
-<!--            <div id="success"></div>-->
-<!--        </form>-->
-<!--    </div>-->
-<!--</div>-->
-
-<!--<script>-->
-<!--    const csrfToken  = document.querySelector('meta[name="_csrf"]').content;-->
-<!--    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;-->
-
-<!--    const pathParts = window.location.pathname.split('/');-->
-<!--    const taskId = pathParts[pathParts.length - 1];-->
-
-<!--    const errorBox   = document.getElementById('error');-->
-<!--    const successBox = document.getElementById('success');-->
-
-<!--    // Тип карточки, полученный с сервера. Менять его на этой странице нельзя,-->
-<!--    // но при сохранении он должен уйти обратно без изменений — бэкенд его ждёт.-->
-<!--    let currentType = null;-->
-
-<!--    // ====== Переключение режимов ======-->
-<!--    function openEdit() {-->
-<!--        document.getElementById('editView').classList.remove('hidden');-->
-<!--        document.getElementById('readView').classList.add('hidden');-->
-<!--        errorBox.textContent = '';-->
-<!--        successBox.textContent = '';-->
-<!--        document.getElementById('name').focus();-->
-<!--    }-->
-
-<!--    function closeEdit() {-->
-<!--        document.getElementById('editView').classList.add('hidden');-->
-<!--        document.getElementById('readView').classList.remove('hidden');-->
-<!--        errorBox.textContent = '';-->
-<!--        successBox.textContent = '';-->
-<!--    }-->
-
-<!--    // ====== Загрузка через REST ======-->
-<!--    async function loadTask() {-->
-<!--        const res = await fetch('/api/task/' + taskId);-->
-
-<!--        if (res.status === 404) {-->
-<!--            document.getElementById('title').textContent = 'Заметка не найдена';-->
-<!--            document.getElementById('readView').querySelector('.edit-open-btn').style.display = 'none';-->
-<!--            document.getElementById('body').style.display = 'none';-->
-<!--            document.getElementById('editView').classList.add('hidden');-->
-<!--            return;-->
-<!--        }-->
-<!--        if (!res.ok) {-->
-<!--            errorBox.textContent = 'Ошибка загрузки: ' + res.status;-->
-<!--            return;-->
-<!--        }-->
-
-<!--        const t = await res.json();-->
-
-<!--        // Запоминаем текущий тип — он уйдёт обратно при сохранении-->
-<!--        currentType = t.type;-->
-
-<!--        document.getElementById('title').textContent = t.name;-->
-<!--        document.getElementById('createdAt').textContent = new Date(t.createdAt).toLocaleString('ru-RU');-->
-<!--        document.getElementById('updatedAt').textContent = new Date(t.updatedAt).toLocaleString('ru-RU');-->
-<!--        document.getElementById('body').textContent = t.body ?? '';-->
-
-<!--        document.getElementById('name').value = t.name;-->
-<!--        document.getElementById('bodyInput').value = t.body ?? '';-->
-<!--    }-->
-
-<!--    // ====== Сохранение через REST ======-->
-<!--    document.getElementById('editForm').addEventListener('submit', async (e) => {-->
-<!--        e.preventDefault();-->
-<!--        errorBox.textContent = '';-->
-<!--        successBox.textContent = '';-->
-
-<!--        if (!currentType) {-->
-<!--            errorBox.textContent = 'Тип заметки ещё не загружен, попробуйте позже';-->
-<!--            return;-->
-<!--        }-->
-
-<!--        // Тип отправляем тем же, что и пришёл с сервера — пользователь его не меняет-->
-<!--        const params = new URLSearchParams({-->
-<!--            name: document.getElementById('name').value,-->
-<!--            body: document.getElementById('bodyInput').value,-->
-<!--            type: currentType-->
-<!--        });-->
-
-<!--        const res = await fetch('/api/update/' + taskId + '?' + params, {-->
-<!--            method: 'PUT',-->
-<!--            headers: { [csrfHeader]: csrfToken }-->
-<!--        });-->
-
-<!--        if (res.ok) {-->
-<!--            await loadTask();   // обновляем данные в режиме чтения-->
-<!--            closeEdit();        // возвращаемся в режим чтения-->
-<!--        } else {-->
-<!--            errorBox.textContent = 'Не удалось сохранить: ' + res.status;-->
-<!--        }-->
-<!--    });-->
-
-<!--    loadTask();-->
-<!--</script>-->
-
-<!--</body>-->
-<!--</html>-->
-
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
@@ -440,6 +21,7 @@
             --btn-hover: #344d3c;
             --btn-cancel: #4a2a2a;
             --btn-cancel-hover: #5e3535;
+            --accent: #4caf50;
         }
 
         *, *::before, *::after {
@@ -525,6 +107,12 @@
             word-break: break-word;
         }
 
+        /* Форматирование в режиме чтения */
+        .body strong { font-weight: bold; }
+        .body em     { font-style: italic; }
+        .body u      { text-decoration: underline; }
+        .body s      { text-decoration: line-through; opacity: 0.8; }
+
         hr {
             border: none;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -564,6 +152,57 @@
             resize: vertical;
         }
 
+        /* ====== Панель форматирования ====== */
+        .format-bar {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .fmt-btn {
+            background-color: var(--btn-submit);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            min-width: 40px;
+            min-height: 40px;
+            padding: 6px 10px;
+            font-size: 16px;
+            font-family: Georgia, 'Times New Roman', serif;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .fmt-btn:hover,
+        .fmt-btn:active {
+            background-color: var(--btn-hover);
+        }
+
+        .fmt-btn[data-fmt="bold"]   { font-weight: bold; }
+        .fmt-btn[data-fmt="italic"] { font-style: italic; }
+        .fmt-btn[data-fmt="under"]  { text-decoration: underline; }
+        .fmt-btn[data-fmt="strike"] { text-decoration: line-through; }
+
+        .format-bar + textarea {
+            margin-top: 8px;
+        }
+
+        .hint {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .hint code {
+            background: rgba(0, 0, 0, 0.25);
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
         /* ====== Кнопки действий ====== */
         .actions {
             margin-top: 25px;
@@ -599,7 +238,8 @@
             background-color: var(--btn-cancel-hover);
         }
 
-        .edit-open-btn {
+        .edit-open-btn,
+        .download-btn {
             background-color: var(--btn-submit);
             color: var(--text-color);
             border: none;
@@ -613,8 +253,56 @@
         }
 
         .edit-open-btn:hover,
-        .edit-open-btn:active {
+        .edit-open-btn:active,
+        .download-btn:hover,
+        .download-btn:active {
             background-color: var(--btn-hover);
+        }
+
+        .read-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        /* ====== Меню «Скачать» ====== */
+        .download-wrap {
+            position: relative;
+        }
+
+        .download-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            background: var(--bg-dark);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 210px;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .download-menu button {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            min-height: 40px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .download-menu button:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .hidden { display: none !important; }
@@ -650,11 +338,24 @@
                 min-width: 0;
             }
 
-            .edit-open-btn {
+            .read-actions {
+                flex-direction: column;
+            }
+
+            .edit-open-btn,
+            .download-btn {
                 display: block;
                 width: 100%;
                 padding: 14px 20px;
                 font-size: 16px;
+            }
+
+            .download-wrap {
+                width: 100%;
+            }
+
+            .download-menu {
+                width: 100%;
             }
 
             h3 {
@@ -714,7 +415,18 @@
             Изменено: <span id="updatedAt">?</span>
         </div>
 
-        <button type="button" class="edit-open-btn" onclick="openEdit()">Редактировать</button>
+        <div class="read-actions" id="readActions">
+            <button type="button" class="edit-open-btn" onclick="openEdit()">Редактировать</button>
+
+            <div class="download-wrap">
+                <button type="button" class="download-btn" id="downloadBtn">Скачать ▾</button>
+                <div class="download-menu hidden" id="downloadMenu">
+                    <button type="button" data-format="txt">Текст (.txt) — без разметки</button>
+                    <button type="button" data-format="md">Markdown (.md)</button>
+                    <button type="button" data-format="html">Веб-страница (.html)</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ====== Режим редактирования ====== -->
@@ -726,7 +438,24 @@
             <input type="text" id="name" required />
 
             <label for="bodyInput">Текст</label>
+
+            <div class="format-bar" id="formatBar">
+                <button type="button" class="fmt-btn" data-fmt="bold"   title="Жирный (Ctrl+B)"        aria-label="Жирный">B</button>
+                <button type="button" class="fmt-btn" data-fmt="italic" title="Курсив (Ctrl+I)"        aria-label="Курсив">I</button>
+                <button type="button" class="fmt-btn" data-fmt="under"  title="Подчёркнутый (Ctrl+U)" aria-label="Подчёркнутый">U</button>
+                <button type="button" class="fmt-btn" data-fmt="strike" title="Зачёркнутый"            aria-label="Зачёркнутый">S</button>
+            </div>
             <textarea id="bodyInput"></textarea>
+
+            <div class="hint">
+                Выделите текст и нажмите кнопку (или Ctrl+B / Ctrl+I / Ctrl+U).
+                В тексте это выглядит так:
+                <code>**жирный**</code>
+                <code>*курсив*</code>
+                <code>__подчёркнутый__</code>
+                <code>~~зачёркнутый~~</code>
+                — а в режиме чтения будет оформлено.
+            </div>
 
             <div class="actions">
                 <button type="submit">Сохранить</button>
@@ -748,10 +477,210 @@
 
     const errorBox   = document.getElementById('error');
     const successBox = document.getElementById('success');
+    const bodyInput  = document.getElementById('bodyInput');
 
     // Тип карточки, полученный с сервера. Менять его на этой странице нельзя,
     // но при сохранении он должен уйти обратно без изменений — бэкенд его ждёт.
     let currentType = null;
+
+    // Последние сохранённые данные заметки (для скачивания)
+    let currentName = '';
+    let currentBody = '';
+
+    // ====== Форматирование: разметка <-> HTML ======
+    // Разметка хранится прямо в тексте заметки, бэкенд менять не нужно.
+    //   **жирный**   *курсив*   __подчёркнутый__   ~~зачёркнутый~~
+    const MARKERS = {
+        bold:   '**',
+        italic: '*',
+        under:  '__',
+        strike: '~~'
+    };
+
+    function escapeHtml(s) {
+        return String(s)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    // Сначала экранируем весь текст (защита от XSS), и только потом
+    // превращаем наши маркеры в безопасные теги.
+    function renderRich(text) {
+        let h = escapeHtml(text);
+        h = h.replace(/\*\*(\S(?:[^\n]*?\S)?)\*\*/g,      '<strong>$1</strong>');
+        h = h.replace(/__(\S(?:[^\n]*?\S)?)__/g,          '<u>$1</u>');
+        h = h.replace(/~~(\S(?:[^\n]*?\S)?)~~/g,          '<s>$1</s>');
+        h = h.replace(/\*(\S(?:[^\n*]*?\S)?)\*/g,         '<em>$1</em>');
+        return h;
+    }
+
+    // Текст без маркеров (для .txt)
+    function stripMarkers(text) {
+        return String(text)
+            .replace(/\*\*(\S(?:[^\n]*?\S)?)\*\*/g, '$1')
+            .replace(/__(\S(?:[^\n]*?\S)?)__/g,     '$1')
+            .replace(/~~(\S(?:[^\n]*?\S)?)~~/g,     '$1')
+            .replace(/\*(\S(?:[^\n*]*?\S)?)\*/g,    '$1');
+    }
+
+    // Markdown: у нас __x__ — подчёркивание, а в Markdown это жирный,
+    // поэтому при экспорте заменяем на <u>…</u>
+    function toMarkdown(text) {
+        return String(text).replace(/__(\S(?:[^\n]*?\S)?)__/g, '<u>$1</u>');
+    }
+
+    // ====== Кнопки форматирования в редакторе ======
+    function applyFormat(kind) {
+        const mk = MARKERS[kind];
+        const ml = mk.length;
+        const ta = bodyInput;
+        const value = ta.value;
+        const start = ta.selectionStart;
+        const end   = ta.selectionEnd;
+
+        // Ничего не выделено — вставляем пару маркеров и ставим курсор между ними
+        if (start === end) {
+            ta.value = value.slice(0, start) + mk + mk + value.slice(end);
+            ta.focus();
+            ta.setSelectionRange(start + ml, start + ml);
+            return;
+        }
+
+        const selected = value.slice(start, end);
+        const lines = selected.split('\n');
+
+        // Строка уже обёрнута маркерами?
+        const wrapped = (line) => {
+            const t = line.trim();
+            return t.length > ml * 2 && t.startsWith(mk) && t.endsWith(mk)
+                // для * не считаем частью ** (жирного)
+                && !(kind === 'italic' && (t.startsWith('**') && t.endsWith('**')) && t.length > 4 && !/^\*\*\*/.test(t));
+        };
+
+        const nonEmpty = lines.filter(l => l.trim() !== '');
+        const allWrapped = nonEmpty.length > 0 && nonEmpty.every(wrapped);
+
+        let result;
+        let handledOutside = false;
+
+        if (allWrapped) {
+            // Снимаем форматирование внутри выделения
+            result = lines.map(l => {
+                if (!wrapped(l)) return l;
+                return l.replace(/^(\s*)(.*?)(\s*)$/, (m, a, b, c) =>
+                    a + b.slice(ml, b.length - ml) + c);
+            }).join('\n');
+        } else {
+            // Маркеры стоят сразу вокруг выделения? Тогда снимаем их снаружи.
+            const before = value.slice(Math.max(0, start - ml), start);
+            const after  = value.slice(end, end + ml);
+            const charBefore = value.charAt(start - ml - 1);
+            const charAfter  = value.charAt(end + ml);
+            const outsideOk = before === mk && after === mk
+                && !(kind === 'italic' && (charBefore === '*' || charAfter === '*'));
+
+            if (outsideOk && lines.length === 1) {
+                ta.value = value.slice(0, start - ml) + selected + value.slice(end + ml);
+                ta.focus();
+                ta.setSelectionRange(start - ml, start - ml + selected.length);
+                handledOutside = true;
+            } else {
+                // Оборачиваем каждую непустую строку отдельно,
+                // пробелы по краям остаются снаружи маркеров
+                result = lines.map(l => {
+                    if (l.trim() === '') return l;
+                    return l.replace(/^(\s*)(.*?)(\s*)$/, (m, a, b, c) => a + mk + b + mk + c);
+                }).join('\n');
+            }
+        }
+
+        if (handledOutside) return;
+
+        ta.value = value.slice(0, start) + result + value.slice(end);
+        ta.focus();
+        ta.setSelectionRange(start, start + result.length);
+    }
+
+    // mousedown + preventDefault — чтобы выделение в textarea не сбрасывалось
+    document.querySelectorAll('#formatBar .fmt-btn').forEach(btn => {
+        btn.addEventListener('mousedown', (e) => e.preventDefault());
+        btn.addEventListener('click', () => applyFormat(btn.dataset.fmt));
+    });
+
+    // Горячие клавиши (e.code — работают и в русской раскладке)
+    bodyInput.addEventListener('keydown', (e) => {
+        if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+        const map = { KeyB: 'bold', KeyI: 'italic', KeyU: 'under' };
+        const kind = map[e.code];
+        if (kind) {
+            e.preventDefault();
+            applyFormat(kind);
+        }
+    });
+
+    // ====== Скачивание ======
+    const downloadBtn  = document.getElementById('downloadBtn');
+    const downloadMenu = document.getElementById('downloadMenu');
+
+    downloadBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        downloadMenu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.download-wrap')) {
+            downloadMenu.classList.add('hidden');
+        }
+    });
+
+    function safeFileName(name) {
+        const cleaned = String(name).replace(/[\\/:*?"<>|]+/g, '').trim();
+        return (cleaned || 'note').slice(0, 80);
+    }
+
+    function saveBlob(content, mime, fileName) {
+        const blob = new Blob([content], { type: mime + ';charset=utf-8' });
+        const url  = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function downloadNote(format) {
+        const base = safeFileName(currentName);
+
+        if (format === 'txt') {
+            saveBlob(currentName + '\n\n' + stripMarkers(currentBody) + '\n',
+                'text/plain', base + '.txt');
+        } else if (format === 'md') {
+            saveBlob('# ' + currentName + '\n\n' + toMarkdown(currentBody) + '\n',
+                'text/markdown', base + '.md');
+        } else if (format === 'html') {
+            const html =
+                '<!DOCTYPE html>\n<html lang="ru">\n<head>\n<meta charset="UTF-8">\n' +
+                '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+                '<title>' + escapeHtml(currentName) + '</title>\n' +
+                '<style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;padding:0 16px;line-height:1.6;color:#222}' +
+                '.body{white-space:pre-wrap;overflow-wrap:anywhere}</style>\n' +
+                '</head>\n<body>\n<h1>' + escapeHtml(currentName) + '</h1>\n' +
+                '<div class="body">' + renderRich(currentBody) + '</div>\n</body>\n</html>\n';
+            saveBlob(html, 'text/html', base + '.html');
+        }
+    }
+
+    downloadMenu.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', () => {
+            downloadMenu.classList.add('hidden');
+            downloadNote(b.dataset.format);
+        });
+    });
 
     // ====== Переключение режимов ======
     function openEdit() {
@@ -775,7 +704,7 @@
 
         if (res.status === 404) {
             document.getElementById('title').textContent = 'Заметка не найдена';
-            document.getElementById('readView').querySelector('.edit-open-btn').style.display = 'none';
+            document.getElementById('readActions').style.display = 'none';
             document.getElementById('body').style.display = 'none';
             document.getElementById('editView').classList.add('hidden');
             return;
@@ -789,19 +718,22 @@
 
         // Запоминаем текущий тип — он уйдёт обратно при сохранении
         currentType = t.type;
+        currentName = t.name;
+        currentBody = t.body ?? '';
 
         document.getElementById('title').textContent = t.name;
         document.getElementById('createdAt').textContent = new Date(t.createdAt).toLocaleString('ru-RU');
         document.getElementById('updatedAt').textContent = new Date(t.updatedAt).toLocaleString('ru-RU');
-        document.getElementById('body').textContent = t.body ?? '';
 
+        // Режим чтения: разметка превращается в оформление (текст предварительно экранирован)
+        document.getElementById('body').innerHTML = renderRich(currentBody);
+
+        // Режим редактирования: показываем «сырой» текст с маркерами
         document.getElementById('name').value = t.name;
-        document.getElementById('bodyInput').value = t.body ?? '';
+        bodyInput.value = currentBody;
     }
 
-    // ============================================================
-    // Сохранение: теперь JSON в теле запроса (@RequestBody)
-    // ============================================================
+    // ====== Сохранение через REST ======
     document.getElementById('editForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         errorBox.textContent = '';
@@ -813,17 +745,20 @@
         }
 
         // Тип отправляем тем же, что и пришёл с сервера — пользователь его не меняет
+        // Бэкенд принимает JSON-тело (TaskRequest: name, body, type)
+        const payload = {
+            name: document.getElementById('name').value,
+            body: bodyInput.value,
+            type: currentType
+        };
+
         const res = await fetch('/api/update/' + taskId, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 [csrfHeader]: csrfToken
             },
-            body: JSON.stringify({
-                name: document.getElementById('name').value,
-                body: document.getElementById('bodyInput').value,
-                type: currentType
-            })
+            body: JSON.stringify(payload)
         });
 
         if (res.ok) {
