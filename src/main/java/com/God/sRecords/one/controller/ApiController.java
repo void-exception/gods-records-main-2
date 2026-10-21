@@ -1,6 +1,7 @@
 package com.God.sRecords.one.controller;
 
 import com.God.sRecords.one.dto.TaskDto;
+import com.God.sRecords.one.dto.TaskRequest;
 import com.God.sRecords.one.model.Task;
 import com.God.sRecords.one.model.TypeTask;
 import com.God.sRecords.one.regestration.model.User;
@@ -23,11 +24,10 @@ public class ApiController {
 
     @PostMapping("/create")
     public ResponseEntity<Void> createTask(
-                                        @AuthenticationPrincipal User user,
-                                        @RequestParam("name") String name,
-                                        @RequestParam("body") String body
-                                        ){
-        taskService.createTask(name, body, user);
+            @AuthenticationPrincipal User user,
+            @RequestBody TaskRequest request // <-- изменение здесь
+    ) {
+        taskService.createTask(request.getName(), request.getBody(), user);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -35,11 +35,9 @@ public class ApiController {
     public ResponseEntity<Void> updateTask(
             @AuthenticationPrincipal User user,
             @PathVariable Long id,
-            @RequestParam("name") String name,
-            @RequestParam("body") String body,
-            @RequestParam("type") TypeTask type
-            ){
-        taskService.updateTask(id, name, body, type, user);
+            @RequestBody TaskRequest request // <-- и здесь
+    ) {
+        taskService.updateTask(id, request.getName(), request.getBody(), request.getType(), user);
         return ResponseEntity.ok().build();
     }
 
